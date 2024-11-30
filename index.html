@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Indicação de CV - Juliana Maria Lopes</title>
+</head>
+<body>
+  <h1>Indicação de CV - Juliana Maria Lopes</h1>
+  <form id="cvForm">
+    <label for="file">Suba seu CV aqui:</label><br><br>
+    <input type="file" id="file" name="file" required><br><br>
+    <button type="button" onclick="uploadFile()">Enviar</button>
+  </form>
+  <p id="responseMessage"></p>
+
+  <script>
+    async function uploadFile() {
+      const form = document.getElementById('cvForm');
+      const formData = new FormData(form);
+
+      const response = await fetch('LOGIC_APP_ENDPOINT_URL', {  // Substitua pela URL da Logic App
+        method: 'POST',
+        body: formData
+      });
+
+      const result = await response.json();
+
+      const message = result.success 
+        ? "Seu CV foi enviado com sucesso!" 
+        : "Ocorreu um erro ao enviar o CV.";
+      
+      document.getElementById('responseMessage').innerText = message;
+    }
+  </script>
+</body>
+</html>
