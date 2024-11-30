@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Indicação de curriculos - Juliana Maria Lopes</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 50px auto;
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      color: #333333;
+    }
+    p {
+      color: #555555;
+      font-size: 16px;
+    }
+    form {
+      margin: 20px 0;
+    }
+    select, input[type="file"], button {
+      padding: 10px;
+      font-size: 16px;
+      margin: 10px 0;
+    }
+    button {
+      background-color: #0078d4;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #005a9e;
+    }
+    .success-message {
+      color: #28a745;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+    .error-message {
+      color: #dc3545;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+    .footer {
+      margin-top: 30px;
+      color: #777777;
+      font-size: 14px;
+    }
+    .footer a {
+      color: #0078d4;
+      text-decoration: none;
+    }
+    .footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Indicação de CV - Juliana Maria Lopes</h1>
+    <p>
+      Esta página foi criada para receber currículos para diferentes oportunidades, pois minha caixa de e-mail está ficando muito cheia. 😊
+    </p>
+    <p>
+      Suba seu CV em formato PDF ou Word e selecione a vaga desejada abaixo. Assim que eu receber, farei o encaminhamento para a vaga correspondente.
+      Caso precise de mais informações, entre em contato comigo pelo LinkedIn.
+    </p>
+    <form id="cvForm">
+      <label for="jobSelect">Selecione a vaga:</label><br>
+      <select id="jobSelect" required>
+        <option value="" disabled selected>Escolha uma vaga</option>
+        <option value="analytics_engineer">Analytics Engineer</option>
+      </select><br><br>
+      <label for="file">Suba seu CV aqui (PDF ou Word):</label><br><br>
+      <input type="file" id="file" name="file" accept=".pdf, .doc, .docx" required><br><br>
+      <button type="button" onclick="uploadToBlobStorage()">Enviar</button>
+    </form>
+    <p id="responseMessage"></p>
+    <div class="footer">
+      <p>Entre em contato comigo pelo <a href="https://linkedin.com/in/seu-perfil" target="_blank">LinkedIn</a> caso precise de mais informações.</p>
+    </div>
+  </div>
+
+  <script>
+    async function uploadToBlobStorage() {
+      const jobSelect = document.getElementById('jobSelect');
+      const fileInput = document.getElementById('file');
+      const file = fileInput.files[0];
+
+      if (!jobSelect.value) {
+        document.getElementById('responseMessage').innerHTML = "<span class='error-message'>Por favor, selecione uma vaga.</span>";
+        return;
+      }
+
+      if (!file) {
+        document.getElementById('responseMessage').innerHTML = "<span class='error-message'>Por favor, selecione um arquivo.</span>";
+        return;
+      }
+
+      const allowedExtensions = ['pdf', 'doc', 'docx'];
+      const fileExtension = file.name.split('.').pop().toLowerCase();
+
+      if (!allowedExtensions.includes(fileExtension)) {
+        document.getElementById('responseMessage').innerHTML = "<span class='error-message'>Envie apenas arquivos PDF ou Word.</span>";
+        return;
+      }
+
+      const storageAccount = "storagecvjuliana";
+      const containerName = "curriculos";
+      const sasToken = "sp=racwl&st=2024-11-30T00:48:48Z&se=2026-07-01T08:48:48Z&sv=2022-11-02&sr=c&sig=yruab%2Bm7gvo9L8Wg7IO3y2uEzEnDieIvs%2BDPubVWwCg%3D";
+
+      // Define o caminho com base na vaga selecionada
+      const folder = jobSelect.value;
+      const blobUrl = `https://${storageAccount}.blob.core.windows.net/${containerName}/${folder}/${file.name}?${sasToken}`;
+
+      try {
+        const response = await fetch(blobUrl, {
+          method: 'PUT',
+          headers: {
+            'x-ms-blob-type': 'BlockBlob'
+          },
+          body: file
+        });
+
+        if (response.ok) {
+          document.getElementById('responseMessage').innerHTML = "<span class='success-message'>Seu CV foi enviado com sucesso para a vaga de Analytics Engineer! 😊</span>";
+        } else {
+          document.getElementById('responseMessage').innerHTML = "<span class='error-message'>Erro ao enviar o CV. Por favor, tente novamente.</span>";
+        }
+      } catch (error) {
+        console.error(error);
+        document.getElementById('responseMessage').innerHTML = "<span class='error-message'>Erro ao se conectar ao servidor. Tente novamente mais tarde.</span>";
+      }
+    }
+  </script>
+</body>
+</html>
