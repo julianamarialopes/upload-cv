@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Indicação de Curriculos - Juliana Maria Lopes</title>
+  <title>Indicação de CV - Juliana Maria Lopes</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -12,35 +12,53 @@
       padding: 0;
     }
     .container {
-      max-width: 600px;
+      max-width: 700px;
       margin: 50px auto;
       background: #ffffff;
       border-radius: 8px;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      padding: 20px;
-      text-align: center;
+      padding: 30px;
     }
     h1 {
       color: #333333;
+      text-align: center;
     }
     p {
       color: #555555;
       font-size: 16px;
+      text-align: center;
     }
     form {
       margin: 20px 0;
+      display: grid;
+      grid-template-columns: 150px 1fr;
+      gap: 15px;
+      align-items: center;
     }
-    select, input[type="file"], button {
+    label {
+      font-weight: bold;
+      color: #555555;
+    }
+    input, select {
       padding: 10px;
       font-size: 16px;
-      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      width: 100%;
+    }
+    input[type="file"] {
+      padding: 5px;
     }
     button {
+      grid-column: span 2;
       background-color: #0078d4;
       color: white;
       border: none;
+      padding: 12px;
+      font-size: 16px;
       border-radius: 5px;
       cursor: pointer;
+      margin-top: 10px;
     }
     button:hover {
       background-color: #005a9e;
@@ -49,14 +67,17 @@
       color: #28a745;
       font-weight: bold;
       margin-top: 20px;
+      text-align: center;
     }
     .error-message {
       color: #dc3545;
       font-weight: bold;
       margin-top: 20px;
+      text-align: center;
     }
     .footer {
       margin-top: 30px;
+      text-align: center;
       color: #777777;
       font-size: 14px;
     }
@@ -71,32 +92,51 @@
 </head>
 <body>
   <div class="container">
-    <h1>Indicação de Curriculos - Juliana Maria Lopes</h1>
+    <h1>Indicação de Curriculo - Juliana Maria Lopes</h1>
     <p>
       Esta página foi criada para receber currículos para diferentes oportunidades, pois minha caixa de e-mail está ficando muito cheia. 😊
     </p>
     <p>
-      Suba seu CV em formato PDF ou Word e selecione a vaga desejada abaixo. Assim que eu receber, farei o encaminhamento para a vaga correspondente.
+      Preencha as informações abaixo, selecione a vaga desejada e envie seu CV em formato PDF ou Word.
       Caso precise de mais informações, entre em contato comigo pelo LinkedIn.
     </p>
-    <form id="cvForm">
-      <label for="jobSelect">Selecione a vaga:</label><br>
+    <form id="dataForm">
+      <label for="firstName">Nome:</label>
+      <input type="text" id="firstName" name="firstName" required>
+      
+      <label for="lastName">Sobrenome:</label>
+      <input type="text" id="lastName" name="lastName" required>
+      
+      <label for="email">Email:</label>
+      <input type="email" id="email" name="email" required>
+      
+      <label for="phone">Telefone:</label>
+      <input type="tel" id="phone" name="phone" required>
+
+      <label for="jobSelect">Selecione a vaga:</label>
       <select id="jobSelect" required>
         <option value="" disabled selected>Escolha uma vaga</option>
         <option value="analytics_engineer">Analytics Engineer</option>
-      </select><br><br>
-      <label for="file">Suba seu CV aqui (PDF ou Word):</label><br><br>
-      <input type="file" id="file" name="file" accept=".pdf, .doc, .docx" required><br><br>
-      <button type="button" onclick="uploadToBlobStorage()">Enviar</button>
+        <option value="governança">Especialista Governança</option>
+      </select>
+
+      <label for="file">Suba seu CV:</label>
+      <input type="file" id="file" name="file" accept=".pdf, .doc, .docx" required>
+
+      <button type="button" onclick="uploadDataAndFile()">Enviar</button>
     </form>
     <p id="responseMessage"></p>
     <div class="footer">
-      <p>Entre em contato comigo pelo <a href="https://linkedin.com/in/julianamarialopes" target="_blank">LinkedIn</a> caso precise de mais informações.</p>
+      <p>Entre em contato comigo pelo <a href="https://linkedin.com/in/seu-perfil" target="_blank">LinkedIn</a> caso precise de mais informações.</p>
     </div>
   </div>
 
   <script>
-    async function uploadToBlobStorage() {
+    async function uploadDataAndFile() {
+      const firstName = document.getElementById('firstName').value;
+      const lastName = document.getElementById('lastName').value;
+      const email = document.getElementById('email').value;
+      const phone = document.getElementById('phone').value;
       const jobSelect = document.getElementById('jobSelect');
       const fileInput = document.getElementById('file');
       const file = fileInput.files[0];
@@ -123,12 +163,23 @@
       const containerName = "curriculos";
       const sasToken = "sp=racwl&st=2024-11-30T00:48:48Z&se=2026-07-01T08:48:48Z&sv=2022-11-02&sr=c&sig=yruab%2Bm7gvo9L8Wg7IO3y2uEzEnDieIvs%2BDPubVWwCg%3D";
 
-      // Define o caminho com base na vaga selecionada
-      const folder = jobSelect.value;
-      const blobUrl = `https://${storageAccount}.blob.core.windows.net/${containerName}/${folder}/${file.name}?${sasToken}`;
-
       try {
-        const response = await fetch(blobUrl, {
+        const data = `${firstName},${lastName},${email},${phone}\n`;
+        const dataBlobUrl = `https://${storageAccount}.blob.core.windows.net/${containerName}/dados_pessoas.csv?${sasToken}`;
+
+        await fetch(dataBlobUrl, {
+          method: 'PUT',
+          headers: {
+            'x-ms-blob-type': 'BlockBlob',
+            'Content-Type': 'text/csv'
+          },
+          body: data
+        });
+
+        const folder = jobSelect.value;
+        const cvBlobUrl = `https://${storageAccount}.blob.core.windows.net/${containerName}/${folder}/${file.name}?${sasToken}`;
+
+        const response = await fetch(cvBlobUrl, {
           method: 'PUT',
           headers: {
             'x-ms-blob-type': 'BlockBlob'
@@ -137,7 +188,7 @@
         });
 
         if (response.ok) {
-          document.getElementById('responseMessage').innerHTML = "<span class='success-message'>Seu CV foi enviado com sucesso para a vaga de Analytics Engineer! 😊</span>";
+          document.getElementById('responseMessage').innerHTML = `<span class='success-message'>Seu CV foi enviado com sucesso! 😊</span>`;
         } else {
           document.getElementById('responseMessage').innerHTML = "<span class='error-message'>Erro ao enviar o CV. Por favor, tente novamente.</span>";
         }
